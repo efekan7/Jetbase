@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Jetbase Airlines</title>
+
+  <style>
+    body{
+      font-family:Arial;
+      background:url("images/sky.jpg") no-repeat center center fixed;
+      background-size:cover;
+      color:white;
+      margin:0;
+      padding:20px;
+    }
+
+    h1{color:#38bdf8;}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      background:rgba(30,41,59,0.8);
+      padding:10px;
+      border-radius:10px;
+      backdrop-filter:blur(8px);
+    }
+
+    button,select,input{
+      padding:8px;
+      border:none;
+      border-radius:6px;
+      margin:5px;
+      cursor:pointer;
+    }
+
+    input{
+      width:220px;
+    }
+
+    .card{
+      background:rgba(30,41,59,0.8);
+      padding:15px;
+      border-radius:10px;
+      width:250px;
+      text-align:center;
+      transition:0.3s;
+      backdrop-filter:blur(8px);
+    }
+
+    .card:hover{
+      transform:translateY(-8px) scale(1.03);
+      box-shadow:0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .card img{
+      width:120px;
+      height:60px;
+      object-fit:contain;
+    }
+
+    .compare{
+      display:flex;
+      gap:15px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:20px;
+    }
+
+    .bar{
+      height:10px;
+      background:#334155;
+      border-radius:6px;
+      margin:6px 0;
+      overflow:hidden;
+    }
+
+    .green{background:#22c55e;height:10px;}
+    .red{background:#ef4444;height:10px;}
+    .yellow{background:#facc15;height:10px;}
+
+    .aiBox{
+      margin-top:20px;
+      padding:15px;
+      border-radius:10px;
+      background:rgba(15,23,42,0.7);
+      white-space:pre-line;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button onclick="location.href='index.html'">🏠 Home</button>
+  <button onclick="location.href='aircraft.html'">✈ Aircraft</button>
+</div>
+
+<h1>Airline Compare</h1>
+
+<!-- CURRENCY -->
+<select id="currency" onchange="compare()">
+  <option value="usd">$ USD</option>
+  <option value="eur">€ EUR</option>
+</select>
+
+<!-- SEARCH -->
+<input id="searchAirline" placeholder="Search airline..." onkeyup="searchAirline()">
+
+<br>
+
+<select id="a1"></select>
+<select id="a2"></select>
+
+<button onclick="compare()">Compare</button>
+
+<div id="ranking"></div>
+<div id="result"></div>
+<div class="aiBox" id="aiBox"></div>
+
+<script>
+
+/* =========================
+   AIRLINE DATA (100+ AUTO)
+========================= */
+
+const airlinesBase = [
+["Emirates","emirates.png"],
+["Qatar Airways","qatar.png"],
+["Lufthansa","lufthansa.png"],
+["KLM","klm.png"],
+["Ryanair","ryanair.png"],
+["Delta","delta.png"],
+["United","united.png"],
+["Turkish Airlines","turkish.png"],
+["Air France","airfrance.png"],
+["British Airways","british.png"],
+["Singapore Airlines","singapore.png"],
+["Cathay Pacific","cathay.png"],
+["ANA","ana.png"],
+["Japan Airlines","jal.png"],
+["Etihad","etihad.png"],
+["Qantas","qantas.png"],
+["Air Canada","aircanada.png"],
+["Southwest","southwest.png"],
+["EasyJet","easyjet.png"],
+["Wizz Air","wizzair.png"],
+["Finnair","finnair.png"],
+["Iberia","iberia.png"],
+["Swiss","swiss.png"],
+["Austrian Airlines","austrian.png"],
+["Brussels Airlines","brussels.png"],
+["Norwegian","norwegian.png"],
+["SAS","sas.png"],
+["LOT Polish Airlines","lot.png"],
+["Garuda Indonesia","garuda.png"],
+["Thai Airways","thai.png"],
+["Vietnam Airlines","vietnam.png"],
+["Malaysia Airlines","malaysia.png"],
+["Philippine Airlines","philippine.png"],
+["AirAsia","airasia.png"],
+["IndiGo","indigo.png"],
+["SpiceJet","spicejet.png"],
+["JetBlue","jetblue.png"],
+["Alaska Airlines","alaska.png"],
+["Hawaiian Airlines","hawaiian.png"]
+];
+
+const data = {};
+
+airlinesBase.forEach((a,i)=>{
+data["air"+i] = {
+name:a[0],
+logo:"images/"+a[1],
+fleet: Math.floor(Math.random()*900)+50,
+passengers: Math.floor(Math.random()*200000000)+10000000,
+rating: Math.floor(Math.random()*3)+3,
+price: Math.floor(Math.random()*800)+100,
+comfort: Math.floor(Math.random()*3)+3,
+service: Math.floor(Math.random()*3)+3
+};
+});
+
+/* =========================
+   CURRENCY
+========================= */
+
+function getPrice(p){
+return document.getElementById("currency").value==="eur"
+? Math.round(p*0.92)
+: p;
+}
+
+function getSymbol(){
+return document.getElementById("currency").value==="eur" ? "€" : "$";
+}
+
+/* =========================
+   FILL DROPDOWN
+========================= */
+
+function fill(){
+a1.innerHTML="";
+a2.innerHTML="";
+
+for(let k in data){
+a1.innerHTML+=`<option value="${k}">${data[k].name}</option>`;
+a2.innerHTML+=`<option value="${k}">${data[k].name}</option>`;
+}
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+function searchAirline(){
+
+let input=document.getElementById("searchAirline").value.toLowerCase();
+
+a1.innerHTML="";
+a2.innerHTML="";
+
+for(let k in data){
+if(data[k].name.toLowerCase().includes(input)){
+a1.innerHTML+=`<option value="${k}">${data[k].name}</option>`;
+a2.innerHTML+=`<option value="${k}">${data[k].name}</option>`;
+}
+}
+
+}
+
+/* =========================
+   RANKING
+========================= */
+
+function showRanking(){
+
+let arr=Object.values(data);
+
+let cheap=arr.reduce((a,b)=>a.price<b.price?a:b);
+let exp=arr.reduce((a,b)=>a.price>b.price?a:b);
+
+ranking.innerHTML=`
+<p>💸 Cheapest: ${cheap.name} (${getSymbol()}${getPrice(cheap.price)})</p>
+<p>💎 Most Expensive: ${exp.name} (${getSymbol()}${getPrice(exp.price)})</p>
+`;
+}
+
+/* =========================
+   AI
+========================= */
+
+function ai(a,b,sA,sB){
+let t="Conclusion:\n";
+
+t+=a.fleet>b.fleet?a.name+" larger fleet.\n":b.name+" larger fleet.\n";
+t+=a.passengers>b.passengers?a.name+" more passengers.\n":b.name+" more passengers.\n";
+t+=a.price<b.price?a.name+" cheaper.\n":b.name+" cheaper.\n";
+t+=a.comfort>b.comfort?a.name+" more comfortable.\n":b.name+" more comfortable.\n";
+t+=a.service>b.service?a.name+" better service.\n":b.name+" better service.\n";
+t+=sA>sB?a.name+" better value.\n":b.name+" better value.\n";
+
+return t;
+}
+
+/* =========================
+   COMPARE
+========================= */
+
+function compare(){
+
+let a=data[a1.value];
+let b=data[a2.value];
+
+const maxFleet=1000;
+const maxPass=200000000;
+const maxPrice=1000;
+
+const scoreA=Math.round((a.rating*a.comfort*a.service)/a.price*1000);
+const scoreB=Math.round((b.rating*b.comfort*b.service)/b.price*1000);
+
+result.innerHTML=`
+<div class="compare">
+
+<div class="card">
+<img src="${a.logo}">
+<h3>${a.name}</h3>
+
+<p>${a.fleet} aircraft</p>
+<div class="bar"><div class="${a.fleet>b.fleet?'green':a.fleet<b.fleet?'red':'yellow'}"
+style="width:${(a.fleet/maxFleet)*100}%"></div></div>
+
+<p>${a.passengers.toLocaleString()} passengers</p>
+<div class="bar"><div class="${a.passengers>b.passengers?'green':a.passengers<b.passengers?'red':'yellow'}"
+style="width:${(a.passengers/maxPass)*100}%"></div></div>
+
+<p>Average Price: ${getSymbol()}${getPrice(a.price)}</p>
+
+<p>Comfort ⭐ ${a.comfort}/5</p>
+<p>Service ⭐ ${a.service}/5</p>
+
+<p>Value Score: ${scoreA}</p>
+
+</div>
+
+<div class="card">
+<img src="${b.logo}">
+<h3>${b.name}</h3>
+
+<p>${b.fleet} aircraft</p>
+<div class="bar"><div class="${b.fleet>a.fleet?'green':b.fleet<a.fleet?'red':'yellow'}"
+style="width:${(b.fleet/maxFleet)*100}%"></div></div>
+
+<p>${b.passengers.toLocaleString()} passengers</p>
+<div class="bar"><div class="${b.passengers>a.passengers?'green':b.passengers<b.passengers?'red':'yellow'}"
+style="width:${(b.passengers/maxPass)*100}%"></div></div>
+
+<p>Average Price: ${getSymbol()}${getPrice(b.price)}</p>
+
+<p>Comfort ⭐ ${b.comfort}/5</p>
+<p>Service ⭐ ${b.service}/5</p>
+
+<p>Value Score: ${scoreB}</p>
+
+</div>
+
+</div>
+`;
+
+aiBox.innerText=ai(a,b,scoreA,scoreB);
+showRanking();
+}
+
+/* =========================
+   INIT
+========================= */
+
+window.onload=()=>{
+fill();
+showRanking();
+};
+
+</script>
+
+</body>
+</html>
